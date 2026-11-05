@@ -1,6 +1,11 @@
-[package]
-name = "matheo"
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+# Valeurs partagées par toutes les crates du workspace.
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
+# Les versions des dépendances, déclarées une seule fois pour tout le workspace.
+[workspace.dependencies]
