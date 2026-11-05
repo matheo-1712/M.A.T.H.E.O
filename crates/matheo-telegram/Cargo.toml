@@ -4,3 +4,5 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+anyhow = "1.0.104"
+teloxide = "0.17.0"
