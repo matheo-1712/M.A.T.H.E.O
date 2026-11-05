@@ -2,6 +2,8 @@
 resolver = "3"
 members = ["crates/*"]
 
+
+
 # Valeurs partagées par toutes les crates du workspace.
 [workspace.package]
 version = "0.1.0"
@@ -9,3 +11,11 @@ edition = "2024"
 
 # Les versions des dépendances, déclarées une seule fois pour tout le workspace.
 [workspace.dependencies]
+# ---------------------------
+# Nos propre crates
+# ---------------------------
+matheo-telegram = { path = "crates/matheo-telegram" }
+
+# ---------------------------
+# Others
+# ---------------------------
