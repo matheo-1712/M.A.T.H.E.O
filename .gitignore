@@ -1,7 +1,3 @@
-.venv/
-.idea/
-__pycache__/
-*.py[cod]
+/target
 .env
-.env.*
-!.env.example
+.idea/
