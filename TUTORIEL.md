@@ -490,7 +490,7 @@ impl Config {
             .context("TELEGRAM_CHAT_ID doit être un nombre")?;
 
         let api_addr = env::var("API_ADDR")
-            .unwrap_or("127.0.0.1:3000".to_string())
+            .unwrap_or_else(|_| "127.0.0.1:3000".to_string())
             .parse()
             .context("API_ADDR doit ressembler à 127.0.0.1:3000")?;
 
@@ -514,7 +514,7 @@ impl Config {
 - `.context("...")` (fourni par `anyhow::Context`) remplace le message d'erreur par défaut par un message clair.
 - `?` : en cas d'erreur, on arrête tout et on renvoie l'erreur (étape 1.7).
 - `.parse()` convertit le texte en nombre (`i64`) ou en adresse (`SocketAddr`). Rust devine **vers quel type** convertir grâce aux types des champs de `Config`.
-- `.unwrap_or("127.0.0.1:3000".to_string())` : si `API_ADDR` est absent, on prend une valeur par défaut.
+- `.unwrap_or_else(|_| "127.0.0.1:3000".to_string())` : si `API_ADDR` est absent, on prend une valeur par défaut. La closure `|_| ...` (étape 1.12) n'est appelée qu'en cas d'absence : la chaîne par défaut n'est donc pas créée pour rien quand la variable existe.
 - `Ok(Config { telegram_token, chat_id, ... })` : écrire `chat_id` tout seul revient à écrire `chat_id: chat_id`.
 - `dotenvy::dotenv()` cherche le `.env` dans le dossier courant **puis dans les dossiers parents** : il trouve donc celui de la racine du workspace.
 

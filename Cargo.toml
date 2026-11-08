@@ -12,10 +12,21 @@ edition = "2024"
 # Les versions des dépendances, déclarées une seule fois pour tout le workspace.
 [workspace.dependencies]
 # ---------------------------
-# Nos propre crates
+# Nos propres crates
 # ---------------------------
 matheo-telegram = { path = "crates/matheo-telegram" }
 
 # ---------------------------
-# Others
+# Bibliothèques externes
 # ---------------------------
+anyhow = "1.0.104"
+axum = "0.8.9"
+chrono-tz = "0.10.4"
+dotenvy = "0.15.7"
+env_logger = "0.11.11"
+log = "0.4.35"
+serde = { version = "1.0.229", features = ["derive"] }
+teloxide = { version = "0.17.0", features = ["macros"] }
+tokio = { version = "1.54.1", features = ["full"] }
+tokio-cron-scheduler = "0.15.1"
+tower = { version = "0.5.3", features = ["util"] }

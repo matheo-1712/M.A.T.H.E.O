@@ -17,10 +17,9 @@ impl Config {
         // `.ok()` = "si le fichier n'existe pas, ce n'est pas grave".
         dotenvy::dotenv().ok();
 
-
-        /// =========================================
-        /// Chargement des variables d'environnement
-        /// =========================================
+        // =========================================
+        // Chargement des variables d'environnement
+        // =========================================
         let telegram_token =
             env::var("TELEGRAM_BOT_TOKEN").context("TELEGRAM_BOT_TOKEN manque dans .env")?;
 
@@ -30,7 +29,7 @@ impl Config {
             .context("TELEGRAM_CHAT_ID doit être un nombre")?;
 
         let api_addr = env::var("API_ADDR")
-            .unwrap_or("127.0.0.1:3000".to_string())
+            .unwrap_or_else(|_| "127.0.0.1:3000".to_string())
             .parse()
             .context("API_ADDR doit ressembler à 127.0.0.1:3000")?;
 
