@@ -8,5 +8,6 @@ anyhow.workspace = true
 dotenvy.workspace = true
 env_logger.workspace = true
 log.workspace = true
+matheo-api.workspace = true
 matheo-telegram.workspace = true
 tokio.workspace = true
