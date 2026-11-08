@@ -15,7 +15,7 @@ async fn main() -> anyhow::Result<()> {
         env!("CARGO_PKG_VERSION"),
     );
 
-    message_manager.envoyer(&message).await?;
+    message_manager.send(&message).await?;
     log::info!("{}", &message);
 
     Ok(())
