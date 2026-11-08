@@ -4,5 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-anyhow = "1.0.104"
-dotenvy = "0.15.7"
+anyhow.workspace = true
+dotenvy.workspace = true
+env_logger.workspace = true
+log.workspace = true
+matheo-telegram.workspace = true
+tokio.workspace = true
