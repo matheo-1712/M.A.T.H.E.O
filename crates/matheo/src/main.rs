@@ -17,6 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
     message_manager.send(&message).await?;
     log::info!("{}", &message);
+    message_manager.listen_for_commands().await;
 
     Ok(())
 }
