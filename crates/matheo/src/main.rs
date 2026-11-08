@@ -17,6 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
     message_manager.send(&message).await?;
     log::info!("{}", &message);
+    matheo_api::start(config.api_addr, message_manager.clone(), config.api_key).await?;
     message_manager.listen_for_commands().await;
 
     Ok(())

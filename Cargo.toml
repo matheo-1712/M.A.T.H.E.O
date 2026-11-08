@@ -15,6 +15,7 @@ edition = "2024"
 # Nos propres crates
 # ---------------------------
 matheo-telegram = { path = "crates/matheo-telegram" }
+matheo-api = { path = "crates/matheo-api" }
 
 # ---------------------------
 # Bibliothèques externes

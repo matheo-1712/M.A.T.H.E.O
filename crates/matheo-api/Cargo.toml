@@ -1,0 +1,12 @@
+[package]
+name = "matheo-api"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+log.workspace = true
+matheo-telegram.workspace = true
+serde.workspace = true
+tokio.workspace = true
