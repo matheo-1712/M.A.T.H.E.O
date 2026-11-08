@@ -228,7 +228,7 @@ Deux façons de partager :
   let c = b.clone();  // b et c existent tous les deux
   ```
 
-Dans ce projet, on fera souvent `messager.clone()` : l'objet qui envoie les messages Telegram doit être utilisé à trois endroits (commandes, API, tâches). Le cloner ne coûte presque rien : on copie juste une « poignée » vers la même connexion.
+Dans ce projet, on fera souvent `message_manager.clone()` : l'objet qui envoie les messages Telegram doit être utilisé à trois endroits (commandes, API, tâches). Le cloner ne coûte presque rien : on copie juste une « poignée » vers la même connexion.
 
 ### 1.9 Modules : découper une crate en fichiers
 
@@ -607,15 +607,15 @@ use teloxide::prelude::*;
 /// C'est le seul type que les autres crates utilisent : elles n'ont pas
 /// besoin de savoir que Telegram existe.
 #[derive(Clone)]
-pub struct Messager {
+pub struct MessageManager {
     bot: Bot,
     chat_id: ChatId,
 }
 
-impl Messager {
-    /// Crée un `Messager` à partir du token du bot et de ton chat_id.
-    pub fn new(token: String, chat_id: i64) -> Messager {
-        Messager {
+impl MessageManager {
+    /// Crée un `MessageManager` à partir du token du bot et de ton chat_id.
+    pub fn new(token: String, chat_id: i64) -> MessageManager {
+        MessageManager {
             bot: Bot::new(token),
             chat_id: ChatId(chat_id),
         }
@@ -633,8 +633,8 @@ impl Messager {
 
 - `//! ...` (avec un `!`) documente **la crate entière**, alors que `///` documente l'élément juste en dessous.
 - `use teloxide::prelude::*;` importe d'un coup les éléments les plus utilisés de teloxide (`Bot`, `ChatId`, `Message`…). Le `*` veut dire « tout ».
-- `pub struct Messager` est public, mais **ses champs `bot` et `chat_id` ne le sont pas** (pas de `pub` devant). Les autres crates peuvent créer un `Messager` avec `Messager::new` et appeler `envoyer`, mais ne voient jamais le `Bot` de teloxide. C'est l'**encapsulation** : on expose le minimum. Si un jour tu remplaces Telegram par autre chose, seule cette crate change.
-- `#[derive(Clone)]` : on pourra faire `messager.clone()` (étape 1.8).
+- `pub struct MessageManager` est public, mais **ses champs `bot` et `chat_id` ne le sont pas** (pas de `pub` devant). Les autres crates peuvent créer un `MessageManager` avec `MessageManager::new` et appeler `envoyer`, mais ne voient jamais le `Bot` de teloxide. C'est l'**encapsulation** : on expose le minimum. Si un jour tu remplaces Telegram par autre chose, seule cette crate change.
+- `#[derive(Clone)]` : on pourra faire `message_manager.clone()` (étape 1.8).
 - `ChatId(chat_id)` : teloxide n'accepte pas un simple nombre. Il veut un `ChatId`, une petite struct qui « emballe » le nombre. Ça empêche de confondre un identifiant de conversation avec un autre nombre.
 - `self.bot.send_message(...).await?` : on prépare le message, on **attend** que Telegram réponde (`.await`) et on remonte l'erreur s'il y en a une (`?`).
 - `envoyer` prend un `&str` (un texte emprunté) : on peut lui passer `"du texte"` directement, ou `&une_string`.
@@ -646,7 +646,7 @@ Remplace `crates/matheo/src/main.rs` par :
 ```rust
 mod config;
 
-use matheo_telegram::Messager;
+use matheo_telegram::MessageManager;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -654,18 +654,18 @@ async fn main() -> anyhow::Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let config = config::Config::from_env()?;
-    let messager = Messager::new(config.telegram_token, config.chat_id);
+    let message_manager = MessageManager::new(config.telegram_token, config.chat_id);
 
-    messager.envoyer("🤖 M.A.T.H.E.O est en ligne !").await?;
+    message_manager.envoyer("🤖 M.A.T.H.E.O est en ligne !").await?;
     log::info!("Message de démarrage envoyé");
 
     Ok(())
 }
 ```
 
-- `use matheo_telegram::Messager;` : la crate s'appelle `matheo-telegram` dans les `Cargo.toml`, mais **dans le code Rust les tirets deviennent des underscores** : `matheo_telegram`.
+- `use matheo_telegram::MessageManager;` : la crate s'appelle `matheo-telegram` dans les `Cargo.toml`, mais **dans le code Rust les tirets deviennent des underscores** : `matheo_telegram`.
 - `#[tokio::main]` + `async fn main` : `main` devient asynchrone et tourne avec Tokio.
-- Le token est **déplacé** dans le `Messager` (étape 1.8) : on n'en a plus besoin ailleurs.
+- Le token est **déplacé** dans le `MessageManager` (étape 1.8) : on n'en a plus besoin ailleurs.
 - `log::info!` affiche une ligne de suivi, avec la date, dans le terminal.
 
 ```bash
@@ -723,7 +723,7 @@ pub async fn repondre(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()
 }
 ```
 
-Dans `crates/matheo-telegram/src/lib.rs`, ajoute la ligne `mod commandes;` juste sous le commentaire `//!`, puis ajoute cette méthode **dans** le bloc `impl Messager`, après `envoyer` :
+Dans `crates/matheo-telegram/src/lib.rs`, ajoute la ligne `mod commandes;` juste sous le commentaire `//!`, puis ajoute cette méthode **dans** le bloc `impl MessageManager`, après `envoyer` :
 
 ```rust
     /// Écoute les commandes Telegram et y répond. Ne s'arrête qu'avec Ctrl+C.
@@ -735,20 +735,20 @@ Dans `crates/matheo-telegram/src/lib.rs`, ajoute la ligne `mod commandes;` juste
 
 **Ce qu'il faut comprendre :**
 
-- `mod commandes;` **sans `pub`** : le module est privé. `Command` et `repondre` sont `pub` à l'intérieur de la crate, mais invisibles pour `matheo`, `matheo-api`… Le reste du workspace ne connaît que `Messager::ecouter_commandes()`.
+- `mod commandes;` **sans `pub`** : le module est privé. `Command` et `repondre` sont `pub` à l'intérieur de la crate, mais invisibles pour `matheo`, `matheo-api`… Le reste du workspace ne connaît que `MessageManager::ecouter_commandes()`.
 - `enum Command` liste les commandes possibles (étape 1.5).
 - `#[derive(BotCommands)]` est la magie de teloxide : il génère le code qui transforme le texte `/ping` en `Command::Ping`.
 - `rename_rule = "lowercase"` : la variante `Ping` correspond à la commande `/ping` (en minuscules).
 - Les commentaires `///` deviennent le texte d'aide : `Command::descriptions()` les rassemble pour la commande `/aide`.
 - `repondre` reçoit 3 choses, fournies automatiquement par teloxide : le `bot`, le `msg` reçu (qui contient notamment `msg.chat.id`, la conversation d'origine) et la `cmd` déjà décodée.
 - Toutes les branches du `match` doivent renvoyer le **même type** : ici `String`, d'où les `.to_string()` (qui transforment un `&str` en `String`).
-- `ecouter_commandes(self)` prend `self` **sans `&`** : la méthode consomme le `Messager` (elle lui prend son `bot`). Après l'avoir appelée, on ne peut plus utiliser ce `Messager`-là, d'où les `.clone()` qu'on fera avant.
+- `ecouter_commandes(self)` prend `self` **sans `&`** : la méthode consomme le `MessageManager` (elle lui prend son `bot`). Après l'avoir appelée, on ne peut plus utiliser ce `MessageManager`-là, d'où les `.clone()` qu'on fera avant.
 - `repl` (pour *Read-Eval-Print Loop*) est une boucle infinie : elle demande sans arrêt à Telegram « y a-t-il de nouveaux messages ? » et, pour chaque commande, appelle `repondre`. Elle ne s'arrête qu'avec **Ctrl+C**.
 
 Dans `crates/matheo/src/main.rs`, remplace la ligne `log::info!("Message de démarrage envoyé");` par :
 
 ```rust
-    messager.ecouter_commandes().await;
+    message_manager.ecouter_commandes().await;
 ```
 
 ```bash
@@ -804,7 +804,7 @@ cargo add axum serde log anyhow tokio matheo-telegram -p matheo-api
 cargo add matheo-api -p matheo
 ```
 
-Note que `matheo-api` dépend de `matheo-telegram` (pour `Messager`), mais **pas** de `teloxide` : elle n'a pas besoin de savoir comment Telegram fonctionne.
+Note que `matheo-api` dépend de `matheo-telegram` (pour `MessageManager`), mais **pas** de `teloxide` : elle n'a pas besoin de savoir comment Telegram fonctionne.
 
 ### 7.2 Le code
 
@@ -819,14 +819,14 @@ use axum::{
     http::{HeaderMap, StatusCode},
     routing::post,
 };
-use matheo_telegram::Messager;
+use matheo_telegram::MessageManager;
 use serde::Deserialize;
 use std::net::SocketAddr;
 
 /// Ce dont la route a besoin pour travailler. Partagé entre toutes les requêtes.
 #[derive(Clone)]
 struct AppState {
-    messager: Messager,
+    message_manager: MessageManager,
     api_key: String,
 }
 
@@ -838,9 +838,9 @@ struct Notification {
 }
 
 /// Réserve le port, puis lance le serveur en arrière-plan.
-pub async fn demarrer(addr: SocketAddr, messager: Messager, api_key: String) -> anyhow::Result<()> {
+pub async fn demarrer(addr: SocketAddr, message_manager: MessageManager, api_key: String) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    let app = router(messager, api_key);
+    let app = router(message_manager, api_key);
     log::info!("API en écoute sur http://{addr}");
 
     tokio::spawn(async move {
@@ -852,10 +852,10 @@ pub async fn demarrer(addr: SocketAddr, messager: Messager, api_key: String) -> 
 }
 
 /// Construit le routeur : une seule route, POST /notify.
-fn router(messager: Messager, api_key: String) -> Router {
+fn router(message_manager: MessageManager, api_key: String) -> Router {
     Router::new()
         .route("/notify", post(notify))
-        .with_state(AppState { messager, api_key })
+        .with_state(AppState { message_manager, api_key })
 }
 
 /// Reçoit une notification et la transfère sur Telegram.
@@ -877,7 +877,7 @@ async fn notify(
     };
 
     // 3. L'envoyer sur Telegram.
-    match state.messager.envoyer(&texte).await {
+    match state.message_manager.envoyer(&texte).await {
         Ok(()) => StatusCode::OK, // 200
         Err(erreur) => {
             log::error!("Envoi Telegram impossible : {erreur}");
@@ -889,7 +889,7 @@ async fn notify(
 
 ### 7.3 Ce qu'il faut comprendre
 
-**Ce qui est public.** Une seule fonction est `pub` : `demarrer`. Tout le reste (`AppState`, `Notification`, `router`, `notify`) est privé à la crate. Le programme principal n'a besoin que de « démarre l'API à cette adresse, avec ce messager et cette clé ».
+**Ce qui est public.** Une seule fonction est `pub` : `demarrer`. Tout le reste (`AppState`, `Notification`, `router`, `notify`) est privé à la crate. Le programme principal n'a besoin que de « démarre l'API à cette adresse, avec ce `MessageManager` et cette clé ».
 
 **`demarrer`.** `TcpListener::bind(addr)` réserve le port. Si le port est déjà pris, le `?` renvoie l'erreur tout de suite, et le programme s'arrête avec un message clair. Ensuite `tokio::spawn(async move { ... })` lance le serveur **en parallèle** (étape 1.11) et la fonction se termine aussitôt. Sans ça, `axum::serve` tournerait à l'infini et `main` n'atteindrait jamais l'écoute des commandes Telegram. `move` donne au bloc la propriété de `listener` et `app`.
 
@@ -897,7 +897,7 @@ async fn notify(
 
 **Le routeur.** `Router::new().route("/notify", post(notify))` signifie : « quand une requête `POST` arrive sur `/notify`, appelle la fonction `notify` ». Une API = une route, donc une seule ligne `.route(...)`.
 
-**L'état partagé (`AppState`).** `notify` a besoin du messager et de la clé. On les range dans une struct qu'on donne au routeur avec `.with_state(...)`. axum la passe ensuite à chaque requête. Elle doit être `Clone` car chaque requête en reçoit une copie.
+**L'état partagé (`AppState`).** `notify` a besoin du `MessageManager` et de la clé. On les range dans une struct qu'on donne au routeur avec `.with_state(...)`. axum la passe ensuite à chaque requête. Elle doit être `Clone` car chaque requête en reçoit une copie.
 
 **Les extracteurs.** Les paramètres de `notify` ne sont pas des valeurs qu'on passe nous-mêmes. axum lit la requête HTTP et **remplit chaque paramètre selon son type** :
 
@@ -922,13 +922,13 @@ async fn notify(
 
 ### 7.4 Lancer l'API depuis le programme
 
-Dans `crates/matheo/src/main.rs`, ajoute cette ligne **juste avant** `messager.ecouter_commandes().await;` :
+Dans `crates/matheo/src/main.rs`, ajoute cette ligne **juste avant** `message_manager.ecouter_commandes().await;` :
 
 ```rust
-    matheo_api::demarrer(config.api_addr, messager.clone(), config.api_key).await?;
+    matheo_api::demarrer(config.api_addr, message_manager.clone(), config.api_key).await?;
 ```
 
-`messager.clone()` : l'API reçoit sa propre copie, car l'original sert juste après à `ecouter_commandes`.
+`message_manager.clone()` : l'API reçoit sa propre copie, car l'original sert juste après à `ecouter_commandes`.
 
 ### 7.5 Tester
 
@@ -986,20 +986,20 @@ Remplace **tout** le contenu de `crates/matheo-scheduler/src/lib.rs` par :
 //! Les tâches qui se lancent toutes seules, à heure fixe.
 
 use chrono_tz::Europe::Paris;
-use matheo_telegram::Messager;
+use matheo_telegram::MessageManager;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 /// Crée le planificateur, y ajoute les tâches quotidiennes et le démarre.
-pub async fn demarrer(messager: Messager) -> anyhow::Result<JobScheduler> {
+pub async fn demarrer(message_manager: MessageManager) -> anyhow::Result<JobScheduler> {
     let planificateur = JobScheduler::new().await?;
 
     // Format : seconde minute heure jour-du-mois mois jour-de-la-semaine
     // "0 0 8 * * *" = tous les jours à 08:00:00 (heure de Paris).
     let bonjour = Job::new_async_tz("0 0 8 * * *", Paris, move |_id, _planificateur| {
-        let messager = messager.clone();
+        let message_manager = message_manager.clone();
         Box::pin(async move {
             let texte = "☀️ Bonjour ! Une nouvelle journée commence.";
-            if let Err(erreur) = messager.envoyer(texte).await {
+            if let Err(erreur) = message_manager.envoyer(texte).await {
                 log::error!("Message du matin non envoyé : {erreur}");
             }
         })
@@ -1039,7 +1039,7 @@ C'est un format standard pour décrire « quand » lancer une tâche. Ici il a *
 
 - `JobScheduler::new()` crée le planificateur. `.add(...)` lui donne une tâche, `.start()` le démarre **en arrière-plan**.
 - `Job::new_async_tz(expression, fuseau, closure)` : à chaque déclenchement, la bibliothèque appelle la **closure** (étape 1.12). Elle reçoit deux paramètres dont on ne se sert pas : le `_` devant leur nom dit à Rust « je sais, je ne les utilise pas ».
-- **Pourquoi `move` et `messager.clone()` ?** La closure doit vivre aussi longtemps que le planificateur, donc elle prend possession du `messager` (`move`). Mais elle s'exécute **chaque jour** : à chaque fois, on donne une copie à la tâche du jour (`let messager = messager.clone();`), et l'original reste dans la closure pour le lendemain.
+- **Pourquoi `move` et `message_manager.clone()` ?** La closure doit vivre aussi longtemps que le planificateur, donc elle prend possession du `message_manager` (`move`). Mais elle s'exécute **chaque jour** : à chaque fois, on donne une copie à la tâche du jour (`let message_manager = message_manager.clone();`), et l'original reste dans la closure pour le lendemain.
 - **Pourquoi `Box::pin(async move { ... })` ?** La bibliothèque attend une tâche asynchrone « emballée » sous une forme précise. Retiens-le comme une formule : *une tâche planifiée = `Box::pin(async move { ton code })`*.
 - On utilise `if let Err` plutôt que `?` : si un envoi rate un matin, on note l'erreur mais le planificateur continue pour les jours suivants.
 - La fonction renvoie le planificateur : `main` va le garder en vie.
@@ -1049,7 +1049,7 @@ C'est un format standard pour décrire « quand » lancer une tâche. Ici il a *
 Dans `crates/matheo/src/main.rs`, juste **après** la ligne qui envoie le message de démarrage, ajoute :
 
 ```rust
-    let _planificateur = matheo_scheduler::demarrer(messager.clone()).await?;
+    let _planificateur = matheo_scheduler::demarrer(message_manager.clone()).await?;
 ```
 
 Le `_` devant `_planificateur` indique qu'on garde la variable sans s'en servir : elle existe jusqu'à la fin de `main`, donc le planificateur reste actif tant que le programme tourne.
@@ -1060,15 +1060,15 @@ Remplace temporairement `"0 0 8 * * *"` par `"*/20 * * * * *"`, lance `cargo run
 
 ### 8.7 Ajouter une autre tâche
 
-Copie le bloc `let bonjour = ...;` + `planificateur.add(bonjour).await?;`, change le nom, l'heure et le texte. Attention : comme `messager` a été déplacé dans la première closure, crée un clone **avant** chaque nouvelle tâche :
+Copie le bloc `let bonjour = ...;` + `planificateur.add(bonjour).await?;`, change le nom, l'heure et le texte. Attention : comme `message_manager` a été déplacé dans la première closure, crée un clone **avant** chaque nouvelle tâche :
 
 ```rust
-    let messager_soir = messager.clone();   // ← à placer AVANT `let bonjour = ...`
+    let message_manager_soir = message_manager.clone();   // ← à placer AVANT `let bonjour = ...`
     // ...
     let bonsoir = Job::new_async_tz("0 0 22 * * *", Paris, move |_id, _planificateur| {
-        let messager = messager_soir.clone();
+        let message_manager = message_manager_soir.clone();
         Box::pin(async move {
-            if let Err(erreur) = messager.envoyer("🌙 Bonne nuit !").await {
+            if let Err(erreur) = message_manager.envoyer("🌙 Bonne nuit !").await {
                 log::error!("Message du soir non envoyé : {erreur}");
             }
         })
@@ -1076,7 +1076,7 @@ Copie le bloc `let bonjour = ...;` + `planificateur.add(bonjour).await?;`, chang
     planificateur.add(bonsoir).await?;
 ```
 
-Si tu oublies, le compilateur te dira `use of moved value: messager` : c'est la règle de la propriété (étape 1.8) qui se manifeste.
+Si tu oublies, le compilateur te dira `use of moved value: message_manager` : c'est la règle de la propriété (étape 1.8) qui se manifeste.
 
 ---
 
@@ -1117,7 +1117,7 @@ mod tests {
 
     /// Un routeur de test, avec un faux token Telegram.
     fn app() -> Router {
-        router(Messager::new("123:faux".to_string(), 1), "secret".to_string())
+        router(MessageManager::new("123:faux".to_string(), 1), "secret".to_string())
     }
 
     #[tokio::test]
@@ -1170,7 +1170,7 @@ cargo test
 ```rust
 mod config;
 
-use matheo_telegram::Messager;
+use matheo_telegram::MessageManager;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -1179,19 +1179,19 @@ async fn main() -> anyhow::Result<()> {
 
     // 1. Configuration
     let config = config::Config::from_env()?;
-    let messager = Messager::new(config.telegram_token, config.chat_id);
+    let message_manager = MessageManager::new(config.telegram_token, config.chat_id);
 
     // 2. Message de démarrage
-    messager.envoyer("🤖 M.A.T.H.E.O est en ligne !").await?;
+    message_manager.envoyer("🤖 M.A.T.H.E.O est en ligne !").await?;
 
     // 3. Tâches quotidiennes
-    let _planificateur = matheo_scheduler::demarrer(messager.clone()).await?;
+    let _planificateur = matheo_scheduler::demarrer(message_manager.clone()).await?;
 
     // 4. API, en arrière-plan
-    matheo_api::demarrer(config.api_addr, messager.clone(), config.api_key).await?;
+    matheo_api::demarrer(config.api_addr, message_manager.clone(), config.api_key).await?;
 
     // 5. Commandes Telegram (bloque jusqu'à Ctrl+C)
-    messager.ecouter_commandes().await;
+    message_manager.ecouter_commandes().await;
 
     Ok(())
 }
@@ -1211,7 +1211,7 @@ M.A.T.H.E.O/
     │   └── src/
     │       ├── main.rs
     │       └── config.rs
-    ├── matheo-telegram/          ← LIB : Messager + commandes
+    ├── matheo-telegram/          ← LIB : MessageManager + commandes
     │   └── src/
     │       ├── lib.rs
     │       └── commandes.rs      (module privé)
@@ -1230,13 +1230,13 @@ M.A.T.H.E.O/
                          │                                                                      │
  Script / domotique ────►│  matheo-api : POST /notify ─────────────┐                            │
    (HTTP + x-api-key)    │      (tâche lancée par tokio::spawn)    │                            │
-                         │                                         ├─► Messager ─► Telegram ───►│──► ton téléphone
+                         │                                         ├─► MessageManager ─────────►│──► Telegram ─► ton téléphone
                          │  matheo-scheduler : chaque jour à 8 h ──┘                            │
                          │      (en arrière-plan)                                               │
                          └──────────────────────────────────────────────────────────────────────┘
 ```
 
-Les trois parties partagent le même `Messager` (cloné), et Tokio les fait avancer en parallèle dans **un seul programme**.
+Les trois parties partagent le même `MessageManager` (cloné), et Tokio les fait avancer en parallèle dans **un seul programme**.
 
 ### 10.4 Les bonnes pratiques d'un workspace
 
@@ -1245,7 +1245,7 @@ Les trois parties partagent le même `Messager` (cloné), et Tokio les fait avan
 3. **Les réglages communs dans `[workspace.package]`** (`version`, `edition`…), hérités avec `xxx.workspace = true`.
 4. **Un préfixe commun** pour les noms (`matheo-…`) : on voit tout de suite ce qui vient du projet.
 5. **Le binaire assemble, les bibliothèques font le travail.** Seul le binaire lit la configuration ; les bibliothèques reçoivent tout en paramètre. Elles restent faciles à tester et à réutiliser.
-6. **Exposer le minimum** : peu d'éléments `pub` par crate (`Messager`, `demarrer`). Le reste est privé et peut changer librement.
+6. **Exposer le minimum** : peu d'éléments `pub` par crate (`MessageManager`, `demarrer`). Le reste est privé et peut changer librement.
 7. **Pas de cycles** : les dépendances vont toujours dans le même sens (Cargo te l'impose de toute façon).
 8. **Chaque crate a ses tests** et se teste seule avec `cargo test -p <crate>`.
 9. **On commite `Cargo.lock`** pour un projet qui produit un programme : tout le monde compile alors avec exactement les mêmes versions.
@@ -1269,7 +1269,7 @@ Les trois parties partagent le même `Messager` (cloné), et Tokio les fait avan
 
 Idées, de la plus simple à la plus ambitieuse :
 
-1. **Réserver le bot à toi seul.** Pour l'instant, n'importe qui trouvant ton bot peut lui envoyer `/ping`. Dans `repondre`, compare `msg.chat.id` à ton `chat_id` et ignore les autres. (Indice : il faudra faire passer le `chat_id` du `Messager` jusqu'à `repondre`.)
+1. **Réserver le bot à toi seul.** Pour l'instant, n'importe qui trouvant ton bot peut lui envoyer `/ping`. Dans `repondre`, compare `msg.chat.id` à ton `chat_id` et ignore les autres. (Indice : il faudra faire passer le `chat_id` du `MessageManager` jusqu'à `repondre`.)
 2. **Une commande avec argument**, ex. `/rappel acheter du pain`. Dans l'enum : `Rappel(String)`. teloxide met le texte après la commande dans le `String`.
 3. **Une crate `matheo-meteo`** : appeler une API météo (crate `reqwest`) et envoyer la prévision dans la tâche de 8 h. Bon exercice pour refaire seul toute la marche à suivre d'une nouvelle crate.
 4. **Une crate `matheo-core`** pour la logique métier (liste de courses, rappels…), **sans aucune dépendance à Telegram ni à HTTP**. Les autres crates l'utilisent, et elle se teste très facilement.

@@ -7,15 +7,15 @@ use teloxide::prelude::*;
 /// C'est le seul type que les autres crates utilisent : elles n'ont pas
 /// besoin de savoir que Telegram existe.
 #[derive(Clone)]
-pub struct Messager {
+pub struct MessageManager {
     bot: Bot,
     chat_id: ChatId,
 }
 
-impl Messager {
-    /// Crée un `Messager` à partir du token du bot et de ton chat_id.
-    pub fn new(token: String, chat_id: i64) -> Messager {
-        Messager {
+impl MessageManager {
+    /// Crée un `MessageManager` à partir du token du bot et de ton chat_id.
+    pub fn new(token: String, chat_id: i64) -> MessageManager {
+        MessageManager {
             bot: Bot::new(token),
             chat_id: ChatId(chat_id),
         }
