@@ -1124,7 +1124,7 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
 name = "matheo"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "dotenvy",
@@ -1138,7 +1138,7 @@ dependencies = [
 
 [[package]]
 name = "matheo-api"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -1151,7 +1151,7 @@ dependencies = [
 
 [[package]]
 name = "matheo-scheduler"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono-tz",
@@ -1162,7 +1162,7 @@ dependencies = [
 
 [[package]]
 name = "matheo-telegram"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "log",
