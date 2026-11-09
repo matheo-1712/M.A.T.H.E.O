@@ -11,13 +11,14 @@ async fn main() -> anyhow::Result<()> {
     let message_manager = MessageManager::new(config.telegram_token, config.chat_id);
 
     let message = format!(
-        "M.A.T.H.E.O est en ligne !\nVersion : {}",
+        "M.A.T.H.E.O est en ligne ! Version : {}",
         env!("CARGO_PKG_VERSION"),
     );
 
     message_manager.send(&message).await?;
     log::info!("{}", &message);
     matheo_api::start(config.api_addr, message_manager.clone(), config.api_key).await?;
+    let _scheduler = matheo_scheduler::start(message_manager.clone()).await?;
     message_manager.listen_for_commands().await;
 
     Ok(())
