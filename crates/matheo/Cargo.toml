@@ -9,5 +9,6 @@ dotenvy.workspace = true
 env_logger.workspace = true
 log.workspace = true
 matheo-api.workspace = true
+matheo-scheduler = { version = "0.3.0", path = "../matheo-scheduler" }
 matheo-telegram.workspace = true
 tokio.workspace = true
