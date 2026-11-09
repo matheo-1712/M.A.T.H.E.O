@@ -73,3 +73,39 @@ async fn notify(
         }
     }
 }
+/// -------------------
+/// TEST
+/// -------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::Request;
+    use tower::ServiceExt;
+
+    /// Fabrique une requête POST /notify avec la clé et le JSON donnés.
+    fn request(key: &str, json: &str) -> Request<Body> {
+        Request::post("/notify")
+            .header("x-api-key", key)
+            .header("content-type", "application/json")
+            .body(Body::from(json.to_string()))
+            .unwrap()
+    }
+
+    /// Un routeur de test, avec un faux token Telegram.
+    fn app() -> Router {
+        router(MessageManager::new("123:faux".to_string(), 1), "secret".to_string())
+    }
+
+    #[tokio::test]
+    async fn rejects_wrong_key() {
+        let response = app().oneshot(request("mauvaise", r#"{"message":"hi"}"#)).await.unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn rejects_json_without_message() {
+        let response = app().oneshot(request("secret", r#"{"title":"hi"}"#)).await.unwrap();
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    }
+}
