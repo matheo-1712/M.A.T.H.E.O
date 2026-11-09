@@ -15,11 +15,14 @@ async fn main() -> anyhow::Result<()> {
         env!("CARGO_PKG_VERSION"),
     );
 
+    // -------------------------
+    // Action de démarrage
+    // -------------------------
     message_manager.send(&message).await?;
     log::info!("{}", &message);
     matheo_api::start(config.api_addr, message_manager.clone(), config.api_key).await?;
     let _scheduler = matheo_scheduler::start(message_manager.clone()).await?;
     message_manager.listen_for_commands().await;
-
+    // -------------------------
     Ok(())
 }
