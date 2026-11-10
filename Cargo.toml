@@ -10,11 +10,12 @@ edition = "2024"
 # Les versions des dépendances, déclarées une seule fois pour tout le workspace.
 [workspace.dependencies]
 # ---------------------------
-# Nos propres crates
+# Mes propres crates
 # ---------------------------
 matheo-telegram = { path = "crates/matheo-telegram" }
 matheo-api = { path = "crates/matheo-api" }
 matheo-scheduler = { path = "crates/matheo-scheduler" }
+matheo-calendar = { path = "crates/matheo-calendar" }
 
 # ---------------------------
 # Bibliothèques externes

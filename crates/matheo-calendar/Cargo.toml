@@ -1,0 +1,6 @@
+[package]
+name = "matheo-calendar"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
