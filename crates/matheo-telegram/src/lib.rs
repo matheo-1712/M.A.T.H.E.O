@@ -32,6 +32,10 @@ impl MessageManager {
     /// Écoute les commandes Telegram et y répond. Ne s'arrête qu'avec Ctrl+C.
     pub async fn listen_for_commands(self) {
         log::info!("En attente de messages Telegram…");
-        commands::Command::repl(self.bot, commands::reply).await;
+        let chat_id = self.chat_id;
+        commands::Command::repl(self.bot, move |bot, msg, cmd| {
+            commands::reply(bot, msg, cmd, chat_id)
+        })
+        .await;
     }
 }

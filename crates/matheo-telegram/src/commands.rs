@@ -15,7 +15,10 @@ pub enum Command {
 }
 
 /// Appelée automatiquement à chaque commande reçue sur Telegram.
-pub async fn reply(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
+pub async fn reply(bot: Bot, msg: Message, cmd: Command, chat_id: ChatId) -> ResponseResult<()> {
+    if chat_id != msg.chat.id {
+        return Ok(()); // Ignore les messages qui ne viennent pas de toi.
+    }
     let text = match cmd {
         Command::Start => "Salut ! Je suis M.A.T.H.E.O, ton assistant. Tape /help.".to_string(),
         Command::Help => Command::descriptions().to_string(),
